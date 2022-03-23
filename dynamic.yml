@@ -1,0 +1,29 @@
+http:
+  routers:
+    opnsense:
+      entrypoints:
+        - websecure
+      rule: Host(`opnsense.localdomain`)
+      service: opnsense
+      tls:
+        certResolver: localdomain
+
+    pve:
+      entrypoints:
+        - websecure
+      rule: Host(`pve.localdomain`)
+      service: pve
+      tls:
+        certResolver: localdomain
+
+  services:
+    opnsense:
+      loadBalancer:
+        servers:
+          - url: https://192.168.122.81
+
+    pve:
+      loadBalancer:
+        servers:
+          - url: https://192.168.122.80:8006
+

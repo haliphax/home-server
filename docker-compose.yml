@@ -1,0 +1,70 @@
+version: '3'
+
+services:
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce:2.11.1
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.portainer-secure.entrypoints=websecure
+      - traefik.http.routers.portainer-secure.rule=Host(`portainer.localdomain`)
+      - traefik.http.routers.portainer-secure.service=portainer
+      - traefik.http.routers.portainer-secure.tls.certresolver=localdomain
+      - traefik.http.services.portainer.loadbalancer.server.port=9000
+    networks:
+      - proxy
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+
+  step-ca:
+    container_name: step-ca
+    environment:
+      DOCKER_STEPCA_INIT_NAME: localdomain
+      DOCKER_STEPCA_INIT_DNS_NAMES: ca.localdomain
+    image: smallstep/step-ca
+    ports:
+      - 9000:9000
+    restart: unless-stopped
+    volumes:
+      - step-ca_data:/home/step
+
+  traefik:
+    container_name: traefik
+    environment:
+      LEGO_CA_CERTIFICATES: /root_ca.crt
+      TRAEFIK_CERTIFICATESRESOLVERS_LOCALDOMAIN_ACME_CERTIFICATESDURATION: 24
+    image: traefik:2.6
+    networks:
+      - default
+      - proxy
+    ports:
+      - 80:80
+      - 443:443
+    restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./dynamic.yml:/configurations/dynamic.yml:ro
+      - ./root_ca.crt:/root_ca.crt
+      - ./traefik.yml:/traefik.yml:ro
+      - traefik_acme:/acme
+
+networks:
+  default:
+
+  proxy:
+    external: true
+
+volumes:
+  portainer_data:
+    external: true
+
+  step-ca_data:
+    external: true
+
+  traefik_acme:
+    external: true
+
