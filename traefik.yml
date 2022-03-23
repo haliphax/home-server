@@ -4,7 +4,7 @@ acme:
 certificatesResolvers:
   localdomain:
     acme:
-      caServer: https://ca.localdomain:9000/acme/acme/directory
+      caServer: https://ca.localdomain:9000/acme/localdomain/directory
       email: traefik@docker.localdomain
       storage: /acme/certs.json
       tlsChallenge: true
